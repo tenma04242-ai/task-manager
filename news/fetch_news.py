@@ -1,7 +1,7 @@
 import feedparser
 import yfinance as yf
-from google import genai
 import urllib.request
+import urllib.error
 import json
 import os
 from datetime import datetime, timezone, timedelta
@@ -13,8 +13,16 @@ SLACK_WEBHOOK_URL = os.environ["SLACK_WEBHOOK_URL"]
 JST = timezone(timedelta(hours=9))
 today = datetime.now(JST).strftime("%Y/%m/%d")
 
-# Gemini 設定
-client = genai.Client(api_key=GEMINI_API_KEY)
+def gemini_generate(prompt, model="gemini-2.0-flash-lite"):
+    """Gemini REST API を直接呼び出す"""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+    body = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}]
+    }).encode("utf-8")
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req) as r:
+        result = json.loads(r.read())
+    return result["candidates"][0]["content"]["parts"][0]["text"]
 
 # RSS フィード
 RSS_FEEDS = [
@@ -134,11 +142,7 @@ prompt = f"""
 ・（同上）
 """
 
-response = client.models.generate_content(
-    model="gemini-1.5-flash",
-    contents=prompt,
-)
-report = response.text
+report = gemini_generate(prompt)
 
 # Slack 投稿
 message = f"📰 *今日の経済ニュース | {today}*\n\n{report}"
