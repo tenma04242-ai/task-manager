@@ -1,0 +1,28 @@
+name: 毎朝経済ニュース投稿
+
+on:
+  schedule:
+    - cron: '1 23 * * *'  # 毎日 23:01 UTC = 翌朝 8:01 JST
+  workflow_dispatch:       # 手動実行ボタン
+
+jobs:
+  post-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存関係インストール
+        run: pip install feedparser yfinance google-generativeai
+
+      - name: 経済ニュースを取得して Slack に投稿
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python news/fetch_news.py
