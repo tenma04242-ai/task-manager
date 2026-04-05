@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
 
       - name: 依存関係インストール
-        run: pip install feedparser yfinance google-generativeai
+        run: pip install feedparser yfinance google-genai
 
       - name: 経済ニュースを取得して Slack に投稿
         env:

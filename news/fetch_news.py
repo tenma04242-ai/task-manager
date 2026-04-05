@@ -1,6 +1,6 @@
 import feedparser
 import yfinance as yf
-import google.generativeai as genai
+from google import genai
 import urllib.request
 import json
 import os
@@ -14,8 +14,7 @@ JST = timezone(timedelta(hours=9))
 today = datetime.now(JST).strftime("%Y/%m/%d")
 
 # Gemini 設定
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 # RSS フィード
 RSS_FEEDS = [
@@ -135,7 +134,10 @@ prompt = f"""
 ・（同上）
 """
 
-response = model.generate_content(prompt)
+response = client.models.generate_content(
+    model="gemini-2.0-flash",
+    contents=prompt,
+)
 report = response.text
 
 # Slack 投稿
